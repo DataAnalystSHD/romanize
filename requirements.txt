@@ -1,5 +1,5 @@
-flask
-pythainlp
-pyyaml
-pydantic
-thai2rom
+flask==2.3.3
+pythainlp==2.3.3
+pyyaml==6.0.1
+pydantic==2.4.2
+thai2rom==1.0.0
