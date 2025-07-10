@@ -14,7 +14,6 @@ CUSTOM_REPLACEMENTS = {
 }
 
 def strip_fancy_unicode(text):
-    # Use NFKC to normalize fancy unicode but keep Thai intact
     cleaned = unicodedata.normalize("NFKC", text)
     print(f"🔤 After strip_fancy_unicode: '{cleaned}'", flush=True)
     return cleaned
@@ -35,7 +34,7 @@ def smart_romanize_and_format(text):
     print(f"🚀 Split words: {words}", flush=True)
     out_words = []
     for word in words:
-        if re.match(r'^[a-zA-Z0-9._-]+$', word):
+        if re.match(r'^[a-zA-Z0-9-]+$', word):
             print(f"🔠 Keeping ASCII word: '{word}'", flush=True)
             out_words.append(word)
         else:
@@ -44,13 +43,14 @@ def smart_romanize_and_format(text):
             print(f"📝 Romanized '{word}' → '{roman_clean}'", flush=True)
             out_words.append(roman_clean if roman_clean else word)
     final = "".join(out_words)
-    print(f"🧹 Before UTM cleanup: '{final}'", flush=True)
-    final = re.sub(r'[^a-zA-Z0-9\s_-]', '', final)
+    print(f"🧹 Before strict cleanup: '{final}'", flush=True)
+    # Only allow [a-z0-9-]
+    final = re.sub(r'[^a-zA-Z0-9-]', '', final)
     final = final.lower()
     final = re.sub(r'\s+', '-', final)
-    print(f"✅ UTM formatted: '{final}'", flush=True)
+    print(f"✅ Strict UTM: '{final}'", flush=True)
     if not final.strip():
-        fallback = re.sub(r'[^a-zA-Z0-9\s_-]', '', preprocess(text)).lower()
+        fallback = re.sub(r'[^a-zA-Z0-9-]', '', preprocess(text)).lower()
         fallback = re.sub(r'\s+', '-', fallback)
         print(f"⚠️ Fallback used: '{fallback}'", flush=True)
         final = fallback
@@ -58,7 +58,7 @@ def smart_romanize_and_format(text):
 
 @app.route('/')
 def home():
-    return "✅ Thai romanization UTM API with debug, NFKC safe!"
+    return "✅ Thai romanization UTM API (only [a-z0-9-]) running!"
 
 @app.route('/romanize', methods=['POST'])
 def transliterate():
