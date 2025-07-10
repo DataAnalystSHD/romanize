@@ -5,29 +5,36 @@ import re
 
 app = Flask(__name__)
 
-# 🔥 Hard-coded common Thai replacements
 CUSTOM_REPLACEMENTS = {
     "ไดอารี": "diary",
     "รีวิว": "review",
     "คิทเช่น": "kitchen",
     "คาเฟ่": "cafe",
     "บิวตี้": "beauty",
-    # you can add more as you analyze your data
+    # add more as needed
 }
 
 def strip_fancy_unicode(text):
-    """
-    Convert stylized unicode (𝙎𝙩𝙤𝙧𝙮, etc) to plain ASCII.
-    """
     return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
 
 def preprocess_custom(text):
-    """
-    Replace common Thai marketing words with direct English equivalents.
-    """
     for thai_word, english_word in CUSTOM_REPLACEMENTS.items():
-        text = re.sub(thai_word, english_word, text)
+        # replaces even inside long text
+        text = re.sub(thai_word, english_word, text, flags=re.IGNORECASE | re.UNICODE)
     return text
+
+def smart_transliterate(text):
+    words = re.split(r'(\s+|-)')  # keep spaces and dashes
+    new_words = []
+    for word in words:
+        if re.match(r'^[a-zA-Z0-9._-]+$', word):
+            new_words.append(word)
+        else:
+            cleaned = strip_fancy_unicode(word)
+            cleaned = preprocess_custom(cleaned)
+            roman = thai2rom(cleaned).replace("-", "")
+            new_words.append(roman)
+    return "".join(new_words)
 
 @app.route('/')
 def home():
@@ -37,16 +44,8 @@ def home():
 def transliterate():
     data = request.get_json()
     text = data.get("text", "")
-
-    text = strip_fancy_unicode(text)  # 🔥 normalize fancy fonts
-    text = preprocess_custom(text)    # 🔥 direct replacements
-
-    romanized = thai2rom(text)        # karaoke transliteration
-    romanized_clean = romanized.replace("-", "")  # no hyphens for UTM
-
-    return jsonify({
-        "romanized": romanized_clean
-    })
+    result = smart_transliterate(text)
+    return jsonify({"romanized": result})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8080)
