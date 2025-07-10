@@ -20,3 +20,4 @@ var/
 *.db
 *.DS_Store
 .vscode/
+*.log

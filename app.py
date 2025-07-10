@@ -42,6 +42,9 @@ def smart_transliterate(text):
             print(f"🔠 Keeping ASCII word: {word}")
             new_words.append(word)
         else:
+            if len(word) > 29:
+                print(f"⚠️ Truncating word '{word}' to 29 chars")
+                word = word[:29]
             roman = thai2rom()(word).replace("\n","")
             roman_clean = re.sub(r'[-\s]+', '', roman)
             print(f"📝 Romanized '{word}' to '{roman_clean}'")
