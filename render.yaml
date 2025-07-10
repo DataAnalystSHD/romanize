@@ -1,4 +1,7 @@
 services:
   - type: web
-    name: thai-romanize-api
-    env: docker
+    name: pythai-transliterator
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
