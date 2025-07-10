@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
 from pythainlp.transliterate import romanize
+import unicodedata
 import re
 
 app = Flask(__name__)
 
-# Hardcoded replacements (Thai to English words)
+# Hardcoded replacements
 CUSTOM_REPLACEMENTS = {
     r"รีวิว": "review",
     r"ไดอารี": "diary",
@@ -13,12 +14,17 @@ CUSTOM_REPLACEMENTS = {
     r"บิวตี้": "beauty",
 }
 
+def strip_fancy_unicode(text):
+    # Convert fancy unicode fonts to plain ASCII where possible
+    return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+
 def preprocess(text):
+    text = strip_fancy_unicode(text)
     for pattern, replacement in CUSTOM_REPLACEMENTS.items():
         text = re.sub(pattern, replacement, text, flags=re.IGNORECASE | re.UNICODE)
     return text
 
-def smart_romanize_with_preprocess(text):
+def smart_romanize_and_format(text):
     text = preprocess(text)
     words = re.split(r'(\s+|-)', text)
     out_words = []
@@ -29,17 +35,22 @@ def smart_romanize_with_preprocess(text):
             roman = romanize(word)
             roman_clean = re.sub(r'[-\s]+', '', roman)
             out_words.append(roman_clean if roman_clean else word)
-    return "".join(out_words)
+    final = "".join(out_words)
+    # Keep . _ - intact, turn spaces to hyphens, remove anything else
+    final = re.sub(r'[^a-zA-Z0-9\s._-]', '', final)
+    final = final.lower()
+    final = re.sub(r'\s+', '-', final)
+    return final
 
 @app.route('/')
 def home():
-    return "✅ Thai karaoke romanization API running with hardcoded replacements!"
+    return "✅ Thai karaoke romanization API running, UTM-friendly!"
 
 @app.route('/romanize', methods=['POST'])
 def transliterate():
     data = request.get_json()
     text = data.get("text", "")
-    result = smart_romanize_with_preprocess(text)
+    result = smart_romanize_and_format(text)
     return jsonify({"romanized": result})
 
 if __name__ == '__main__':
