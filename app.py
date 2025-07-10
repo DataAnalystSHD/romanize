@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # Hardcoded replacements (Thai to English words)
 CUSTOM_REPLACEMENTS = {
-    r"รี.?วิ": "review",
+    r"รีวิว": "review",
     r"ไดอารี": "diary",
     r"คิทเช่น": "kitchen",
     r"คาเฟ่": "cafe",
