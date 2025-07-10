@@ -2,3 +2,4 @@ flask
 pythainlp
 pyyaml
 pydantic
+thai2rom
