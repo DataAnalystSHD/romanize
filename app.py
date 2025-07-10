@@ -5,7 +5,7 @@ import re
 
 app = Flask(__name__)
 
-# 🔥 Your forced replacements
+# 🔥 Hard-coded replacements
 CUSTOM_REPLACEMENTS = {
     "ไดอารี": "diary",
     "รีวิว": "review",
@@ -17,33 +17,35 @@ CUSTOM_REPLACEMENTS = {
 
 def strip_fancy_unicode(text):
     """
-    Convert fancy unicode (𝙆𝙖𝙧𝙣 𝙎𝙩𝙤𝙧𝙮) to plain ascii (Karn Story)
+    Converts fancy unicode like 𝙆𝙖𝙧𝙣 𝙎𝙩𝙤𝙧𝙮 to Karn Story
     """
     return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
 
 def preprocess_custom(text):
     """
-    Replace known Thai words anywhere in string with direct English equivalent.
+    Normalize and replace common Thai marketing words anywhere in the string.
     """
+    text = unicodedata.normalize("NFC", text)  # unify diacritics
     for thai_word, english_word in CUSTOM_REPLACEMENTS.items():
         text = re.sub(thai_word, english_word, text, flags=re.IGNORECASE | re.UNICODE)
     return text
 
 def smart_transliterate(text):
     """
-    Strip fancy fonts, apply custom replacements, then only romanize Thai fragments.
+    Process text: normalize, strip fancy, replace forced words, romanize Thai only.
     """
+    text = unicodedata.normalize("NFC", text)
     text = strip_fancy_unicode(text)
     text = preprocess_custom(text)
 
-    words = re.split(r'(\s+|-)')  # keep spaces and hyphens as separators
+    words = re.split(r'(\s+|-)')  # keep spaces/hyphens
     new_words = []
     for word in words:
         if re.match(r'^[a-zA-Z0-9._-]+$', word):
             new_words.append(word)
         else:
             roman = thai2rom(word)
-            roman = re.sub(r'[-\s]+', '', roman)  # remove hyphens and spaces
+            roman = re.sub(r'[-\s]+', '', roman)  # remove hyphens/spaces
             new_words.append(roman)
     return "".join(new_words)
 
