@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from thai2rom import thai2rom
+from pythainlp.romanization.thai2rom import thai2rom
 import unicodedata
 import re
 
@@ -42,7 +42,7 @@ def smart_transliterate(text):
             print(f"🔠 Keeping ASCII word: {word}")
             new_words.append(word)
         else:
-            roman = thai2rom(word)
+            roman = thai2rom()(word).replace("\n","")
             roman_clean = re.sub(r'[-\s]+', '', roman)
             print(f"📝 Romanized '{word}' to '{roman_clean}'")
             new_words.append(roman_clean)
