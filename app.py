@@ -4,7 +4,7 @@ import re
 
 app = Flask(__name__)
 
-# Full custom replacements (as regex -> replacement)
+# Hardcoded replacements (Thai to English words)
 CUSTOM_REPLACEMENTS = {
     r"รี.?วิ": "review",
     r"ไดอารี": "diary",
@@ -18,12 +18,28 @@ def preprocess(text):
         text = re.sub(pattern, replacement, text, flags=re.IGNORECASE | re.UNICODE)
     return text
 
+def smart_romanize_with_preprocess(text):
+    text = preprocess(text)
+    words = re.split(r'(\s+|-)', text)
+    out_words = []
+    for word in words:
+        if re.match(r'^[a-zA-Z0-9._-]+$', word):
+            out_words.append(word)
+        else:
+            roman = romanize(word)
+            roman_clean = re.sub(r'[-\s]+', '', roman)
+            out_words.append(roman_clean if roman_clean else word)
+    return "".join(out_words)
+
+@app.route('/')
+def home():
+    return "✅ Thai karaoke romanization API running with hardcoded replacements!"
+
 @app.route('/romanize', methods=['POST'])
 def transliterate():
     data = request.get_json()
     text = data.get("text", "")
-    text = preprocess(text)
-    result = romanize(text)
+    result = smart_romanize_with_preprocess(text)
     return jsonify({"romanized": result})
 
 if __name__ == '__main__':
