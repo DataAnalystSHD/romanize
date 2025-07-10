@@ -5,54 +5,56 @@ import re
 
 app = Flask(__name__)
 
-# 🔥 Hard-coded common Thai words to English
+# 🔥 Your forced replacements
 CUSTOM_REPLACEMENTS = {
     "ไดอารี": "diary",
     "รีวิว": "review",
     "คิทเช่น": "kitchen",
     "คาเฟ่": "cafe",
     "บิวตี้": "beauty",
-    "บ้าน": "ban",  # example partial if you want
     # add more as needed
 }
 
 def strip_fancy_unicode(text):
     """
-    Turn fancy fonts like 𝙆𝙖𝙧𝙣 to Karn.
+    Convert fancy unicode (𝙆𝙖𝙧𝙣 𝙎𝙩𝙤𝙧𝙮) to plain ascii (Karn Story)
     """
     return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
 
 def preprocess_custom(text):
     """
-    Replace common marketing words inside any string.
+    Replace known Thai words anywhere in string with direct English equivalent.
     """
     for thai_word, english_word in CUSTOM_REPLACEMENTS.items():
         text = re.sub(thai_word, english_word, text, flags=re.IGNORECASE | re.UNICODE)
     return text
 
 def smart_transliterate(text):
-    words = re.split(r'(\s+|-)')  # keep spaces/hyphens to break on them
+    """
+    Strip fancy fonts, apply custom replacements, then only romanize Thai fragments.
+    """
+    text = strip_fancy_unicode(text)
+    text = preprocess_custom(text)
+
+    words = re.split(r'(\s+|-)')  # keep spaces and hyphens as separators
     new_words = []
     for word in words:
         if re.match(r'^[a-zA-Z0-9._-]+$', word):
             new_words.append(word)
         else:
-            cleaned = strip_fancy_unicode(word)
-            cleaned = preprocess_custom(cleaned)
-            roman = thai2rom(cleaned)
-            roman = re.sub(r'[-\s]+', '', roman)  # remove hyphens & spaces
+            roman = thai2rom(word)
+            roman = re.sub(r'[-\s]+', '', roman)  # remove hyphens and spaces
             new_words.append(roman)
     return "".join(new_words)
 
 @app.route('/')
 def home():
-    return "✅ Thai karaoke romanization API is running!"
+    return "✅ Thai karaoke romanization API running!"
 
 @app.route('/romanize', methods=['POST'])
 def transliterate():
     data = request.get_json()
     text = data.get("text", "")
-    text = preprocess_custom(text)  # ensure forced words replaced first
     result = smart_transliterate(text)
     return jsonify({"romanized": result})
 
