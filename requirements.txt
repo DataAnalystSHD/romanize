@@ -1,3 +1,2 @@
 flask
 pythainlp
--e git+https://github.com/PyThaiNLP/thai2rom.git#egg=thai2rom
