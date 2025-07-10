@@ -5,7 +5,6 @@ import re
 
 app = Flask(__name__)
 
-# Hardcoded replacements
 CUSTOM_REPLACEMENTS = {
     r"รีวิว": "review",
     r"ไดอารี": "diary",
@@ -15,7 +14,7 @@ CUSTOM_REPLACEMENTS = {
 }
 
 def strip_fancy_unicode(text):
-    # Convert fancy unicode fonts to plain ASCII where possible
+    # Convert fancy unicode fonts to plain ASCII
     return unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
 
 def preprocess(text):
@@ -36,15 +35,15 @@ def smart_romanize_and_format(text):
             roman_clean = re.sub(r'[-\s]+', '', roman)
             out_words.append(roman_clean if roman_clean else word)
     final = "".join(out_words)
-    # Keep . _ - intact, turn spaces to hyphens, remove anything else
-    final = re.sub(r'[^a-zA-Z0-9\s._-]', '', final)
+    # Remove any character not a-z, 0-9, space, underscore, hyphen
+    final = re.sub(r'[^a-zA-Z0-9\s_-]', '', final)
     final = final.lower()
     final = re.sub(r'\s+', '-', final)
     return final
 
 @app.route('/')
 def home():
-    return "✅ Thai karaoke romanization API running, UTM-friendly!"
+    return "✅ Thai karaoke romanization API ready for clean UTM!"
 
 @app.route('/romanize', methods=['POST'])
 def transliterate():
