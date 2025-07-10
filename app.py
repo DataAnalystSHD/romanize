@@ -35,7 +35,7 @@ def smart_transliterate(text):
     text = strip_fancy_unicode(text)
     text = preprocess_custom(text)
 
-    words = re.split(r'(\s+|-)')
+    words = re.split(r'(\s+|-)', text)  # ✅ FIXED
     new_words = []
     for word in words:
         if re.match(r'^[a-zA-Z0-9._-]+$', word):
