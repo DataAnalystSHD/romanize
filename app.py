@@ -14,7 +14,8 @@ CUSTOM_REPLACEMENTS = {
 }
 
 def strip_fancy_unicode(text):
-    cleaned = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
+    # Use NFKC to normalize fancy unicode but keep Thai intact
+    cleaned = unicodedata.normalize("NFKC", text)
     print(f"🔤 After strip_fancy_unicode: '{cleaned}'", flush=True)
     return cleaned
 
@@ -57,7 +58,7 @@ def smart_romanize_and_format(text):
 
 @app.route('/')
 def home():
-    return "✅ Thai romanization UTM API with debug + flush!"
+    return "✅ Thai romanization UTM API with debug, NFKC safe!"
 
 @app.route('/romanize', methods=['POST'])
 def transliterate():
